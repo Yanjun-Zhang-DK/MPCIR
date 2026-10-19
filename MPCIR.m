@@ -1,50 +1,44 @@
 
-set(0,'DefaultFigureColormap',jet);% 绘图的默认颜色图
-% DTV重建图像： D:\Dr\four\208\test\DTV\50views\915\915_50views_object_DTV.mat
-% HDTV重建图像：D:\Dr\four\208\test\HDTV\50views\915\915_50views_object_HDTV.mat
-% 深度先验：D:\Dr\four\208\test\Deep_learning\Wavelet-INR\50views\915\915_50views.mat
-%clear all; 
+set(0,'DefaultFigureColormap',jet);
+
 clc;
 load('D:\Dr\four\208\test\DTV\50views\1017\1017_50views_object_DTV.mat');
 load('D:\Dr\four\208\test\HDTV\50views\1017\1017_50views_object_HDTV.mat');
 
 
-%Projection_data
-n_proj = 208; % 投影数 828
-n_iter = 400;  % 迭代数 50
-N = 64;       % 图像大小
-n_polar = 18; % 投影角度数量
-
-% t_factor= 0.45; % Try 0.2:0.1:0.6     0.15  0.45(原)  高阶TV设0.6好一点
+n_proj = 208; 
+n_iter = 400;  
+N = 64;       
+n_polar = 18; 
 
 len_proj=3*sqrt(2);
-bandwidth=0.08; % 0.12, 0.085(原)  (单瓶)0.08  (双瓶,三瓶)0.35
+bandwidth=0.08; 
 
 tx_factor=0.5;
 ty_factor=0.85; %0.85
 tz_factor=0.75;
 t_factor=0.45;
 
-[GX,GY,GZ] = GetAngleVector(n_polar,n_polar);%投影角度
+[GX,GY,GZ] = GetAngleVector(n_polar,n_polar);
 
 % load('sparse_symmetric-arc-1-plus-3.mat');
-% GX = GX(idx(1:n_proj)); %取前几个
+% GX = GX(idx(1:n_proj)); 
 % GY = GY(idx(1:n_proj));
 % GZ = GZ(idx(1:n_proj));
 
 
 %Parameters
-LA = compute_tau_3D_fun_POCS_MSPS(N,GX,GY,GZ); %相当于是A %v_1 = compute_L_for_A_fun_2D(N,n_proj); 系统矩阵A的最大奇异值
-[L1,L2,L3,L] = compute_L_for_D_3D_fun(N); %求最大奇异值 %相当于是D %[D_x,D_y,D] = compute_L_for_D_fun_2D(N); 矩阵D的最大奇异值，即物体的离散梯度变换
+LA = compute_tau_3D_fun_POCS_MSPS(N,GX,GY,GZ); 
+[L1,L2,L3,L] = compute_L_for_D_3D_fun(N); 
 v_x = LA/L1;
 v_y = LA/L2;
 v_z = LA/L3;
 v = LA/L;
 
-c=1.5; % 0.075 0.5 1.5
+c=0.5; % 0.075 0.5 1.5
 
-lamda = 0.000001; % you may let it to be 0.1, 1 and 10，影响收敛速率
-factor = 2.5;  % V的factor，you may let it to be 0.1, 1 and 10，影响收敛速率 0.01(高阶有限 good)；飞了的时候，减小factor的值
+lamda = 0.000001; % you may let it to be 0.1, 1 and 10，
+factor = 2.5;  % 
 v_x = factor*v_x;
 v_y = factor*v_y;
 v_z = factor*v_z;
@@ -55,7 +49,7 @@ projection_HDTV= FP_3D_GPU(object_HDTV,GX,GY,GZ);
 
 projection_DTV=FP_3D_GPU(object_DTV,GX,GY,GZ);
 
-% load('D:\Dr\four\208\test\projection\915_projection_64_208.mat'); % 投影放这 
+% load('D:\Dr\four\208\test\projection\915_projection_64_208.mat');  
 % 
 % projection=denoise_proj(my_projection,bandwidth); % denoise the projecitons
 % 
@@ -68,7 +62,7 @@ projection_DTV=FP_3D_GPU(object_DTV,GX,GY,GZ);
 
 % set up the model parameter
 
-load('D:\Dr\four\208\test\object_truth\1017_reference.mat'); % load('D:\Dr\方向TV\方向TV\实际重建\data\object_truth_0.08_80_828.mat');
+load('D:\Dr\four\208\test\object_truth\1017_reference.mat'); 
 
 object_truth = mat_recFXD;
 % win_1=[0 0.00085];
@@ -83,9 +77,9 @@ delta4 = 1/2/v;   %   1/2/v;
 delta_all = 1/2/v;
 
 
-TV_truth_x=D1f_3D(permute(flip(object_truth, 2), [3,2,1])); % flip(object_truth, 2): 将 object_truth 沿第二个维度（即y轴）翻转
-TV_truth_x=sum(sum(sum(abs(TV_truth_x)))); % permute(..., [3, 2, 1]): 将结果的维度进行重新排列，使其变为 [z, y, x] 的顺序。
-tx=tx_factor*TV_truth_x;% D1f_3D(...): 对重新排列后的图像进行三维梯度计算
+TV_truth_x=D1f_3D(permute(flip(object_truth, 2), [3,2,1])); 
+TV_truth_x=sum(sum(sum(abs(TV_truth_x)))); 
+tx=tx_factor*TV_truth_x;
 
 TV_truth_y=D2f_3D(permute(flip(object_truth, 2), [3,2,1]));
 TV_truth_y=sum(sum(sum(abs(TV_truth_y))));
@@ -99,7 +93,7 @@ TV_truth=qiao_TV_3D(permute(flip(object_truth, 2), [3,2,1]));
 TV_truth=sum(sum(sum(abs(TV_truth))));
 t=t_factor*TV_truth;
 
-load('D:\Dr\pycharm\NerSP\src\model\EWT_500\The_fourth_paper\Wavelet-INR\50views\third\1017\denoised_volume.mat') % 加载object_DL数据
+load('D:\Dr\pycharm\NerSP\src\model\EWT_500\The_fourth_paper\Wavelet-INR\50views\third\1017\denoised_volume.mat') % object_DL
 
 %Initial value
 p=zeros(N,n_proj);
@@ -112,9 +106,9 @@ object=q1;
 object0=q1;
 t1 = q1;
 
-w = 20; % 1/2
-beta = 0.47; % 调整深度先验的权重大小
-k = beta * norm(object_DL(:)); %object_DL为深度先验图像 norm(object_DL(:))
+w = 20; 
+beta = 0.47;  
+k = beta * norm(object_DL(:)); 
 
 one_object=ones(N,N,N);
 u1 = LA / norm(one_object(:)); 
@@ -160,15 +154,15 @@ for ii=1:n_iter
        % a4 = q4 + delta4 * w * (object_DL - object0);
        % norm_a4 = norm(a4(:));
        % if norm_a4 > w * k
-       %     q4 = a4 * (w * k) / norm_a4;  % L2球投影
+       %     q4 = a4 * (w * k) / norm_a4;  
        % else
        %     q4 = a4;
        % end
 
        t1 = min((t1 + delta_all*u1*object0),0);%Step9
-       object1=object-tau*BP_3D_GPU_full(p,GX,GY,GZ) - tau*v_x*D1Tf_3D(q1)- tau*v_y*D2Tf_3D(q2) - tau*v_z*D3Tf_3D(q3)- tau*w*q4 -tau*u1*t1; %Step10 %update strength
-       %object1=object-tau*BP_3D_GPU_full(p,GX,GY,GZ) - tau*v_x*D1Tf_3D(q1)- tau*v_y*D2Tf_3D(q2) - tau*v_z*D3Tf_3D(q3)-tau*u1*t1; %Step10 %update strength
-       %object1 = object1 + tau * 0.1 * (object_DL - object); %额外添加：直接将object推向object_DL
+       object1=object-tau*BP_3D_GPU_full(p,GX,GY,GZ) - tau*v_x*D1Tf_3D(q1)- tau*v_y*D2Tf_3D(q2) - tau*v_z*D3Tf_3D(q3)- tau*w*q4 -tau*u1*t1; 
+       %object1=object-tau*BP_3D_GPU_full(p,GX,GY,GZ) - tau*v_x*D1Tf_3D(q1)- tau*v_y*D2Tf_3D(q2) - tau*v_z*D3Tf_3D(q3)-tau*u1*t1; 
+       %object1 = object1 + tau * 0.1 * (object_DL - object); 
  
    object_step=object1-object;
    object=object1; % object 
@@ -187,19 +181,18 @@ for ii=1:n_iter
   
   object_old=object;
 
-  % object = flip(object, 2); % flip y axis  % 第76行对 object_truth 处理了，所以这里也要对object作同样的处理
+  % object = flip(object, 2); % flip y axis  % 
   % object = permute(object, [3,2,1]); % change x and z
-  % 
-        % nRMSE(ii)=sqrt(mean(mean(mean((object-object_truth).^2))))/mean(mean(mean(object_truth)));
+  
   nRMSE(ii)=sqrt(mean(mean(mean((object-object_truth).^2))))/sqrt(mean(mean(mean((object_truth).^2))));
-        %-----------------------PCC-------------------------------------
+       
   coverance=cov(object(:),object_truth(:));
   PCC(ii)=abs(coverance(1,2))/(sqrt(coverance(1,1))*sqrt(coverance(2,2)));
 
    subplot(2,4,1)
    imagesc(flip(squeeze(object_truth(:,N/2,:)),1));
-   % caxis(win_1);          % 或 clim(win_1)
-   % colorbar;              % 如果需要在旁边显示颜色条
+   % caxis(win_1);          
+   % colorbar;              
 
 
    subplot(2,4,2)
@@ -253,10 +246,6 @@ for ii=1:n_iter
 end
 
 toc;
-% fprintf('the reconstruction used %f seconds\n',toc);
-% object = flip(object, 2); % flip y axis
-% object = permute(object, [3,2,1]); % change x and z
-%b=FP_3D_GPU(object,GX,GY,GZ)-projection;
 
 NDE1= NDE(1,n_iter);
 nRMSE1=nRMSE(1,n_iter);
